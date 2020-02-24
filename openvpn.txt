@@ -1,0 +1,37 @@
+# Instarlar openvpn
+sudo apt-get install openvpn
+
+# conectar vpn 
+openvpn <name_vpn.ovpn>
+
+# cerrar vpn 
+sudo killall openvpn
+
+# cerrar vpn opcion2 
+
+stop the service 
+$ sudo /etc/init.d/openvpn stop
+
+find the process if for some reason it keeps running 
+lsof -i | grep openvpn # kill the proccess(s) by its PID $ kill -9 <PID> 
+
+if necessary restart the service again 
+$ sudo /etc/init.d/openvpn start
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
