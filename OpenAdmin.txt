@@ -1,4 +1,4 @@
-漏洞利用
+
 Conectar VPN hackthebox
 
 Carpeta del proyecto>
