@@ -208,14 +208,17 @@ user.txt
 joanna@openadmin:~$ cat user.txt
 ......1b5f # flag # 1
 
-# Buscar el otro flag de root>
+# Buscar el otro flag de root> sudo -l
 
-joanna@openadmin:~$ sudo /bin/nano /opt/priv 
+joanna@openadmin:~$ sudo -l
 
 ¿El Sudo confirma si realmente necesita ejecutar el archivo como root? Obviamente diga "sí"
 
+joanna@openadmin:~$ sudo /bin/nano /opt/priv 
 
+obtener el archivo /root/root.txt
 
+Conseguimos el segundo flag
 
 
 
@@ -288,18 +291,9 @@ joanna@openadmin:~$ sudo /bin/nano /opt/priv
 
 
 
-$ 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+
+
+
  
  
 
